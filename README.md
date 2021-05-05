@@ -1,1 +1,1 @@
-# -AA-Proyecto2-Geneticos
+Proyecto 2 de Analisis de Algoritmos
