@@ -29,21 +29,27 @@ def poblacion_inicial(forma_silueta, num_poblacion_inicial=8): # Aqui se deberia
     pob_inicial = numpy.empty(shape=(num_poblacion_inicial,
                                          functools.reduce(operator.mul, forma_silueta)),
                                   dtype=numpy.uint8)
+    i = 0
     for indv_num in range(num_poblacion_inicial):
         # Genera aleatoriamente los valores geneticos de los cromosomas de la poblacion inicial
 
         drawTree(300, 550, -90, 8)
         pygame.image.save(window, "current_tree.jpeg")  # Se guarda el arbol dibujado como una imagen
+        color = (0, 0, 0)
+        screen.fill(color)
         current_tree = cv2.imread(
             "current_tree.jpeg")  # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
-        print(generated_tree)
-        print(len(generated_tree))
+        print(current_tree)
+        print(len(current_tree))
 
         current_cromosoma= imagen_a_cromosoma(current_tree)
         print(current_cromosoma)
         print(len(current_cromosoma))
 
         pob_inicial[indv_num, :] = current_cromosoma
+        i = i + 1
+
+    pygame.display.flip()
     print(len(pob_inicial))
     print(pob_inicial)
     return pob_inicial
@@ -86,15 +92,7 @@ window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Fractal Tree")
 screen = pygame.display.get_surface()
 
-drawTree(300, 550, -90, 8)
-pygame.image.save(window, "generated_tree.jpeg") # Se guarda el arbol dibujado como una imagen
-generated_tree = cv2.imread("generated_tree.jpeg") # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
-print(generated_tree)
-print(len(generated_tree))
-
-generado_cromosoma = imagen_a_cromosoma(generated_tree)
-print(generado_cromosoma)
-print(len(generado_cromosoma))
+poblacion_inicial(final.shape)
 
 def input(event):
     if event.type == pygame.QUIT:
