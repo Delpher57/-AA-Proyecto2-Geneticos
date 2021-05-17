@@ -34,11 +34,12 @@ def poblacion_inicial(forma_silueta, num_poblacion_inicial=8): # Aqui se deberia
         # Genera aleatoriamente los valores geneticos de los cromosomas de la poblacion inicial
 
         drawTree(300, 550, -90, 8)
-        pygame.image.save(window, "current_tree.jpeg")  # Se guarda el arbol dibujado como una imagen
+        filename = "current_tree%s" %i
+        pygame.image.save(window, filename + ".jpeg")  # Se guarda el arbol dibujado como una imagen
         color = (0, 0, 0)
         screen.fill(color)
         current_tree = cv2.imread(
-            "current_tree.jpeg")  # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
+            filename + ".jpeg")  # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
         print(current_tree)
         print(len(current_tree))
 
