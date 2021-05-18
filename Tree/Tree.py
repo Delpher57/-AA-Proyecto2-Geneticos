@@ -70,9 +70,9 @@ def seleccion(poblacion, similitudes, numero_padres):
     padres = numpy.empty((numero_padres,poblacion.shape[1]),dtype=numpy.uint8)
 
     for padre in range(numero_padres):
-        similitud_maxima = numpy.where(similitudes == numpy.nax(similitudes))
+        similitud_maxima = numpy.where(similitudes == numpy.max(similitudes))
         similitud_maxima = similitud_maxima[0][0]
-        padres[numero_padres, :] = poblacion[similitud_maxima, :]
+        padres[padre, :] = poblacion[similitud_maxima, :]
         similitudes[similitud_maxima] = -1 # Se pone la similitud del padre seleccionado en -1 para no seleccionarlo en una proxima iteracion
 
     return padres
@@ -115,9 +115,13 @@ screen = pygame.display.get_surface()
 poblacion = poblacion_inicial(final.shape)
 print(len(poblacion))
 similitudes = calcular_todas_similitudes(silueta_cromosoma, poblacion)
+print(similitudes)
+print(len(similitudes))
 
 # se deberia meter este codigo en un loop cuya condicion para deneterse es que tenga una minima cantidad de similitud con la silueta
-padres = seleccion(poblacion, similitudes, len(poblacion)/2)
+padres = seleccion(poblacion, similitudes, len(poblacion)//2)
+print(padres)
+print(len(padres))
 
 def input(event):
     if event.type == pygame.QUIT:
