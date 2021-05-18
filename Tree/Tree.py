@@ -40,20 +40,33 @@ def poblacion_inicial(forma_silueta, num_poblacion_inicial=8): # Aqui se deberia
         screen.fill(color)
         current_tree = cv2.imread(
             filename + ".jpeg")  # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
-        print(current_tree)
-        print(len(current_tree))
 
         current_cromosoma= imagen_a_cromosoma(current_tree)
-        print(current_cromosoma)
-        print(len(current_cromosoma))
 
         pob_inicial[indv_num, :] = current_cromosoma
         i = i + 1
 
     pygame.display.flip()
-    print(len(pob_inicial))
-    print(pob_inicial)
     return pob_inicial
+
+def funcion_adaptabilidad(cromosoma_silueta, cromosoma_arbol_generado):
+    diferencia = cromosoma_silueta - cromosoma_arbol_generado
+    print(diferencia)
+    similitud = numpy.mean(numpy.abs(diferencia))
+    similitud = numpy.sum(cromosoma_silueta) - similitud
+    return similitud
+
+def calcular_todas_similitudes(cromosoma_silueta, poblacion):
+    print(poblacion.shape)
+    array_similitudes = numpy.zeros(poblacion.shape[0])
+
+    for individuo in range(poblacion.shape[0]):
+        array_similitudes[individuo] = funcion_adaptabilidad(cromosoma_silueta, poblacion[individuo, :])
+
+    return array_similitudes
+
+def seleccion():
+    pass
 
 def drawTree(x1, y1, angle, depth):
     # time.sleep(.001)
@@ -72,12 +85,9 @@ imageFileName = input("Escriba el nombre de la imagen: ")
 my_img = cv2.imread(imageFileName) # Se lee la imagen
 inverted_img = (255.0 - my_img) # Se invierte para que el arbol quede en blanco
 final = inverted_img / 255.0
-print(final) # Prueba para visualizar los valores (en un numpy array) de la imagen invertida
-print(len(final))
 
 plt.imshow(final)
 plt.show() # Prueba para ver la imagen invertida
-print(final.shape)
 
 silueta_cromosoma = imagen_a_cromosoma(final) # Se convierte la imagen de la silueta a una cromosoma del algoritmo genetico
 print(silueta_cromosoma)
