@@ -54,6 +54,7 @@ def funcion_adaptabilidad(cromosoma_silueta, cromosoma_arbol_generado):
     print(diferencia)
     similitud = numpy.mean(numpy.abs(diferencia))
     similitud = numpy.sum(cromosoma_silueta) - similitud
+    print(similitud)
     return similitud
 
 def calcular_todas_similitudes(cromosoma_silueta, poblacion):
@@ -65,8 +66,16 @@ def calcular_todas_similitudes(cromosoma_silueta, poblacion):
 
     return array_similitudes
 
-def seleccion():
-    pass
+def seleccion(poblacion, similitudes, numero_padres):
+    padres = numpy.empty((numero_padres,poblacion.shape[1]),dtype=numpy.uint8)
+
+    for padre in range(numero_padres):
+        similitud_maxima = numpy.where(similitudes == numpy.nax(similitudes))
+        similitud_maxima = similitud_maxima[0][0]
+        padres[numero_padres, :] = poblacion[similitud_maxima, :]
+        similitudes[similitud_maxima] = -1 # Se pone la similitud del padre seleccionado en -1 para no seleccionarlo en una proxima iteracion
+
+    return padres
 
 def drawTree(x1, y1, angle, depth):
     # time.sleep(.001)
@@ -103,7 +112,12 @@ window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Fractal Tree")
 screen = pygame.display.get_surface()
 
-poblacion_inicial(final.shape)
+poblacion = poblacion_inicial(final.shape)
+print(len(poblacion))
+similitudes = calcular_todas_similitudes(silueta_cromosoma, poblacion)
+
+# se deberia meter este codigo en un loop cuya condicion para deneterse es que tenga una minima cantidad de similitud con la silueta
+padres = seleccion(poblacion, similitudes, len(poblacion)/2)
 
 def input(event):
     if event.type == pygame.QUIT:
