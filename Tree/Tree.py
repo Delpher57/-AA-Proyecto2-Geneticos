@@ -124,6 +124,7 @@ def cruce(padres, num_individuos):
         permutaciones_usadas.append(permutacion_padres)
         print(permutacion_padres)
         hijo = [permutacion_padres[0][0],permutacion_padres[0][1],permutacion_padres[1][2],permutacion_padres[1][3]]
+        hijo = mutacion(hijo,5)
         print(hijo)
         nueva_poblacion.append(hijo)
 
@@ -137,8 +138,20 @@ def cruce(padres, num_individuos):
     print(parameter_array)
     return nueva_poblacion
 
-def mutacion():
-    pass
+def mutacion(parametros, porcentaje_mutacion):
+    decision_random = random.choice([True, False])
+    parametro_mutar = parametros[random.randrange(0,len(parametros)-1)]
+    print(parametro_mutar)
+    porcentaje_parametro = (porcentaje_mutacion*parametro_mutar) / 100.0
+    print(porcentaje_parametro)
+
+    if decision_random:
+        parametro_mutar += porcentaje_parametro
+    else:
+        parametro_mutar -= porcentaje_parametro
+
+    print(parametro_mutar)
+    return parametro_mutar
 
 def drawTree(x1, y1, angle, depth, tree_number):
     # time.sleep(.001)
