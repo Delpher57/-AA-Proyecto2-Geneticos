@@ -48,11 +48,11 @@ def poblacion_inicial(forma_silueta, num_poblacion_inicial=8): # Aqui se deberia
     for indv_num in range(num_poblacion_inicial):
         # Genera aleatoriamente los valores geneticos de los cromosomas de la poblacion inicial
         x1 = random.randrange(100,301)
-        y1 = random.randrange(300,551)
-        angle = random.randrange(-100,101)
-        depth = random.randrange(1,11)
+        y1 = random.randrange(300,501)
+        angle = random.randrange(-100,-60)
+        depth = random.randrange(5,11)
 
-        drawTree(x1,y1,angle,depth, i)
+        drawTree(x1,y1,angle,depth, False)
         current_parameter_set.append([x1,y1,angle,depth])
         filename = "current_tree%s" %i
         pygame.image.save(window, filename + ".jpeg")  # Se guarda el arbol dibujado como una imagen
@@ -107,7 +107,7 @@ def seleccion(poblacion, similitudes, numero_padres):
     padres = parametros_seleccionados
     return padres
 
-def cruce(padres, num_individuos):
+def cruce(padres, num_individuos, forma_silueta):
     global generation
     global parameter_array
 
@@ -123,8 +123,24 @@ def cruce(padres, num_individuos):
 
         permutaciones_usadas.append(permutacion_padres)
         print(permutacion_padres)
-        hijo = [permutacion_padres[0][0],permutacion_padres[0][1],permutacion_padres[1][2],permutacion_padres[1][3]]
-        hijo = mutacion(hijo,5)
+
+        crossover_point = random.randrange(1,5)
+        hijo = [[],[],[],[]]
+        i = crossover_point
+        remainder = 4 - crossover_point
+        indice = 0
+        while i != 0:
+            hijo[indice] = permutacion_padres[0][indice]
+            i = i - 1
+            indice = indice + 1
+
+        while remainder != 0:
+            hijo[indice] = permutacion_padres[0][indice]
+            remainder = remainder - 1
+            indice = indice + 1
+
+        print(hijo)
+        hijo = mutacion(hijo,20)
         print(hijo)
         nueva_poblacion.append(hijo)
 
@@ -133,38 +149,66 @@ def cruce(padres, num_individuos):
         print(len(nueva_poblacion))
 
     print(nueva_poblacion)
-    generation += 1
     parameter_array.insert(generation, nueva_poblacion)
-    print(parameter_array)
-    return nueva_poblacion
+    print(parameter_array[generation])
+
+    pob_imagenes_nueva = numpy.empty(shape=(num_individuos,
+                                     functools.reduce(operator.mul, forma_silueta)),
+                              dtype=numpy.uint8)
+
+    i = 0
+    for indv_num in range(num_individuos):
+        # Genera aleatoriamente los valores geneticos de los cromosomas de la poblacion inicial
+        color = (0, 0, 0)
+        screen.fill(color)
+        #pygame.display.flip()
+        drawTree(parameter_array[generation][i][0], parameter_array[generation][i][1], parameter_array[generation][i][2], parameter_array[generation][i][3], False)
+        filename = "current_tree%s" % i
+        pygame.image.save(window, filename + ".jpeg")  # Se guarda el arbol dibujado como una imagen
+        color = (0, 0, 0)
+        screen.fill(color)
+        time.sleep(0.04)
+        current_tree = cv2.imread(
+            filename + ".jpeg")  # Se lee la imagen del arbol generado para luego compararla con la imagen de la silueta original
+
+        current_cromosoma = imagen_a_cromosoma(current_tree)
+
+        pob_imagenes_nueva[indv_num, :] = current_cromosoma
+        i = i + 1
+
+    generation += 1
+    pygame.display.flip()
+    print(pob_imagenes_nueva)
+
+    return pob_imagenes_nueva
 
 def mutacion(parametros, porcentaje_mutacion):
     decision_random = random.choice([True, False])
-    parametro_mutar = parametros[random.randrange(0,len(parametros)-1)]
-    print(parametro_mutar)
+    indice = random.randrange(0,len(parametros)-1)
+    parametro_mutar = parametros[indice]
     porcentaje_parametro = (porcentaje_mutacion*parametro_mutar) / 100.0
-    print(porcentaje_parametro)
 
     if decision_random:
         parametro_mutar += porcentaje_parametro
     else:
         parametro_mutar -= porcentaje_parametro
 
-    print(parametro_mutar)
-    return parametro_mutar
+    parametros[indice] = parametro_mutar
+    return parametros
 
-def drawTree(x1, y1, angle, depth, tree_number):
+def drawTree(x1, y1, angle, depth, final):
     # time.sleep(.001)
 
-    pygame.display.flip()
+    if final:
+        pygame.display.flip()
     fork_angle = 20 - (random.random())
     base_len = 10.0 - (random.random())
     if depth > 0:
         x2 = x1 + int(math.cos(math.radians(angle + random.random())) * depth * base_len * (random.random() + 0.5))
         y2 = y1 + int(math.sin(math.radians(angle + random.random())) * depth * base_len * (random.random() + 0.5))
         pygame.draw.line(screen, (255, 255, 255), (x1, y1), (x2, y2), 2)
-        drawTree(x2, y2, angle - fork_angle, depth - 1, tree_number)
-        drawTree(x2, y2, angle + fork_angle, depth - 1, tree_number)
+        drawTree(x2, y2, angle - fork_angle, depth - 1, final)
+        drawTree(x2, y2, angle + fork_angle, depth - 1, final)
 
 
 
@@ -191,15 +235,29 @@ screen = pygame.display.get_surface()
 
 poblacion = poblacion_inicial(final.shape)
 similitudes = calcular_todas_similitudes(silueta_cromosoma, poblacion)
+print(similitudes)
 
+arbol_final = []
 # se deberia meter este codigo en un loop cuya condicion para deneterse es que tenga una minima cantidad de similitud con la silueta
-padres = seleccion(poblacion, similitudes, len(poblacion)//2)
-print(parametros_seleccionados)
-print(len(parametros_seleccionados))
-print(len(poblacion))
-cruce(padres,len(poblacion))
+print(numpy.max(similitudes))
+while numpy.max(similitudes) < 286449.4:
+    padres = seleccion(poblacion, similitudes, len(poblacion)//2)
+    poblacion = cruce(padres,len(poblacion),final.shape)
+    similitudes = calcular_todas_similitudes(silueta_cromosoma,poblacion)
+    print(similitudes)
 
+    arbol_final = []
+    if numpy.max(similitudes) >= 286449.4:
+        similitud_maxima = numpy.where(similitudes == numpy.max(similitudes))
+        print(similitud_maxima[0][0])
+        similitud_maxima = similitud_maxima[0][0]  # Se obtienen los indices de la poblacion seleccionada
+        arbol_final = parameter_array[generation - 1][similitud_maxima]
+        break
 
+print(arbol_final)
+print(parameter_array[generation - 1][similitud_maxima])
+drawTree(arbol_final[0],arbol_final[1],arbol_final[2],arbol_final[3], True) #El arbol final
+print("End")
 def input(event):
     if event.type == pygame.QUIT:
         exit(0)
@@ -210,7 +268,7 @@ def input(event):
         if event.key == K_DOWN:
             screen.fill((0, 0, 0))
             # drawTree(300, 550, -90, 8)
-            drawTree(300, 550, -90, 8, 0)
+            drawTree(300, 550, -90, 8, True)
 
 while True:
     input(pygame.event.wait())
