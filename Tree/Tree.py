@@ -43,7 +43,7 @@ def vector_a_imagen(vector, forma_imagen):
     array_imagen = numpy.reshape(a=vector, newshape=forma_imagen)
     return array_imagen
 
-def poblacion_inicial(forma_silueta, num_poblacion_inicial): # Funcion de poblacion inicial
+def poblacion_inicial(forma_silueta, num_poblacion_inicial=10): # Funcion de poblacion inicial
     global current_parameter_set
     global parameter_array
     global generation
@@ -248,7 +248,7 @@ def drawTree(x1, y1, angle, depth, final):
         drawTree(x2, y2, angle + fork_angle, depth - 1, final)
 
 
-
+#C:\Luis Oswaldo\TEC\A1- Semestres\3er Semestre\Analisis algoritmos\Proyectos\AA-Proyecto2-Geneticos\Tree\silueta.png
 #------------------------------------Se lee y convierte la imagen de la silueta a un numpy array-------------------------------------------------------------------
 imageFileName = input("Escriba el nombre de la imagen: ")
 my_img = cv2.imread(imageFileName) # Se lee la imagen de la silueta
