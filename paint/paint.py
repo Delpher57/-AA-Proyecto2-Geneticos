@@ -1,6 +1,8 @@
 import pygame, sys
 from pygame.locals import *
 from PIL import Image,ImageChops
+import random
+import math
 
 
 windowSurface = pygame.display.set_mode((1280, 720))
@@ -87,7 +89,8 @@ def get_diferencia(imagen):
 pygame.draw.rect(windowSurface, COLOR_4, drawing_canvas_rect, 5)
 pygame.draw.rect(windowSurface, COLOR_1, drawing_canvas_rect)
 
-while True:
+
+while False:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -155,17 +158,6 @@ while True:
             get_diferencia(save_surface)
             save_flag = True
             
-            '''
-            try:
-                with open("saved_files/PaintImage_" + str(file_number) + ".png"):
-                    print("file already exists")
-                    file_number = file_number + 1
-                    save_flag = True
-            except IOError:
-                save_flag = True
-                
-            pygame.image.save(save_surface, "saved_files/PaintImage_" + str(file_number) + ".png")
-            '''
         
 
 
@@ -254,5 +246,6 @@ while True:
 
 
     pygame.display.update()
+
 
 
