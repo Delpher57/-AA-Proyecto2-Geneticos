@@ -26,7 +26,7 @@ def get_color():
     colors += [color]
     return color
 
-def drawTree(x1, y1, angle, depth, angulo_ramas, tamanno,cantidad_ramas=4,grueso=2):
+def drawTree(x1, y1, angle, depth, angulo_inicio, tamanno,cantidad_ramas=4,grueso=2):
     
     
     #fork_angle = angulo_ramas + random.random() * 5
@@ -40,7 +40,9 @@ def drawTree(x1, y1, angle, depth, angulo_ramas, tamanno,cantidad_ramas=4,grueso
 
         angle_diference = (-180)/cantidad_ramas
 
-        initial_angle = (angulo_ramas + cantidad_ramas*10) - (180)/cantidad_ramas
+        initial_angle = (angulo_inicio) - (180)/(cantidad_ramas)
+        if cantidad_ramas==2:
+            initial_angle+=45
 
         for i in range(0,cantidad_ramas):
             drawTree(x2, y2, initial_angle, depth - 1, initial_angle, tamanno,cantidad_ramas)
@@ -68,14 +70,20 @@ def input(event):
 
 
 
+def tree(x1,y1,profundidad,tamanno,cantidad_ramas, ancho_tronco):
+    angulo_inicio =180+(180/(cantidad_ramas-1))
+    if cantidad_ramas==2:
+        angulo_inicio-=90
 
+    angulo_tronco = -90
+    drawTree(x1,y1, angulo_tronco, profundidad ,angulo_inicio ,tamanno,cantidad_ramas,ancho_tronco)
 
 
 while True:
     input(pygame.event.wait())
     screen.fill((0,0,0))
-    
-    drawTree(300, 550, -90, 3 ,180 ,30,test,8)
+    tree(x1=300,y1=550,profundidad=3,tamanno=20,cantidad_ramas=2,ancho_tronco=8)
+   
     pygame.display.flip()
 
 
