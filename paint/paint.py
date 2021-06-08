@@ -1,16 +1,11 @@
-import pygame, sys
+import pygame,math,random,time,sys
 from pygame.locals import *
 from PIL import Image,ImageChops
-import random
-import math
 
 
-windowSurface = pygame.display.set_mode((1280, 720))
 
-COLOR_5 = pygame.Color("#22577a")
-COLOR_1 = pygame.Color("#c7f9cc")
-COLOR_3 = pygame.Color("#57cc99")
-COLOR_4 = pygame.Color("#38a3a5")
+screen = pygame.display.set_mode((1280, 720))
+
 
 #paleta de colores del 1 al 5, de mas claro a mas oscuro:
 COLOR_1 = pygame.Color("#c7f9cc")
@@ -42,14 +37,18 @@ menu_rect = pygame.Rect(0, 0, 150, 360)
 
 
 tree_rect = pygame.Rect(640, 0, 640, 720)
+tree_drawing_canvas_rect = pygame.Rect(795, 20, 320, 360)
+
 left_scr_rect = pygame.Rect(0, 0, 640, 720)
-pygame.draw.rect(windowSurface, COLOR_2, tree_rect)
-pygame.draw.rect(windowSurface, COLOR_3, left_scr_rect)
-
-
 drawing_canvas_rect = pygame.Rect(160, 20, 320, 360)
 drawing_canvas_shadow_rect = pygame.Rect(170, 30, 320, 360)
-pygame.draw.rect(windowSurface, COLOR_4, drawing_canvas_shadow_rect)
+
+pygame.draw.rect(screen, COLOR_2, tree_rect)
+pygame.draw.rect(screen, COLOR_3, left_scr_rect)
+pygame.draw.rect(screen, COLOR_2, tree_rect)
+
+
+pygame.draw.rect(screen, COLOR_4, drawing_canvas_shadow_rect)
 
 
 eraser_rect = pygame.Rect(27, 95, 40, 40)
@@ -67,30 +66,111 @@ file_number = 1
 
 
 
-def get_diferencia(imagen):
+def get_diferencia(dibujo,arbol):
     """[vara de prueba para ver las diferencias entre imagenes]
 
     Args:
         imagen ([pygame image]): [imagen que vamos a comparar]
     """    
-    pil_string_image = pygame.image.tostring(imagen, "RGB",False)
-    pil_image = Image.frombytes("RGB",(320,360),pil_string_image)
+    pil_string_dibujo = pygame.image.tostring(dibujo, "RGB",False)
+    pil_dibujo = Image.frombytes("RGB",(320,360),pil_string_dibujo)
+    #convertimos la imagen de pygame en una imagen de pillow
+    pil_string_arbol = pygame.image.tostring(arbol, "RGB",False)
+    pil_arbol = Image.frombytes("RGB",(320,360),pil_string_arbol)
     #convertimos la imagen de pygame en una imagen de pillow
 
 
-    img1 = Image.open("1.png")
-    diff = ImageChops.difference(img1,pil_image)
+    diff = ImageChops.difference(pil_dibujo,pil_arbol)
     if diff.getbbox():
-        diff.show()
-        return
+        #diff.show()
+        img = pygame.image.fromstring(diff.tobytes(), diff.size, diff.mode)
+
+        img = pygame.transform.scale(img, (220,248))
+        screen.blit(img, (794, 400))
+
+
+# ------------------------------------- #
 
 
 
-pygame.draw.rect(windowSurface, COLOR_4, drawing_canvas_rect, 5)
-pygame.draw.rect(windowSurface, COLOR_1, drawing_canvas_rect)
+def get_random(range=1):
+    return random.uniform(-range, range) * random.choice([-1,1])
+
+def reduce_num(num):
+    if num == 1:
+        return num
+    else:
+        return num - 0.75
 
 
-while False:
+def drawTree(x1, y1, angle, depth, angulo_inicio, tamanno,cantidad_ramas=4,grueso=2, random=0,random2=0):
+    
+    base_len = tamanno
+    if depth > 0:
+        x2 = x1 + int(math.cos(math.radians(angle))*depth*base_len)
+        y2 = y1 + int(math.sin(math.radians(angle))*depth*base_len)
+
+
+        pygame.draw.line(screen, COLOR_5, (x1, y1), (x2, y2), grueso)
+
+        angle_diference = (-180)/cantidad_ramas + get_random(random) 
+
+        initial_angle = (angulo_inicio) - (180)/(cantidad_ramas)  + get_random(random)
+        if cantidad_ramas==2:
+            initial_angle+=45
+
+        for i in range(0,cantidad_ramas):
+            drawTree(x2, y2, initial_angle, depth - 1, initial_angle, tamanno + get_random(random2),cantidad_ramas,random=random,random2= reduce_num(random2))
+            initial_angle -= angle_diference - get_random(random)
+    
+
+def tree(x1,y1,profundidad,tamanno,cantidad_ramas, ancho_tronco,random1, random2):
+    """[generamos un arbo dados loa parametros, 
+        lo que hacemos es llamar la funcion y aqui preparamos los parametros]
+
+    Args:
+        x1 ([int]): [posicion en x del tronco]
+        y1 ([int]): [posicion en y del tronco]
+        profundidad ([int]): [cantidad de subdiviciones]
+        tamanno ([int]): [tamaño del arbol (largo de las ramas)]
+        cantidad_ramas ([int]): [cantidad de amas]
+        ancho_tronco ([int]): [hancho del tronco del arbol]
+        random1 ([int]): [random en los angulos de las hojas]
+        random2 ([int]): [random en el largo de las hojas]
+    """    
+    angulo_inicio =180+(180/(cantidad_ramas-1))
+    if cantidad_ramas==2:
+        angulo_inicio-=90
+
+    angulo_tronco = -90
+    drawTree(x1,y1, angulo_tronco, profundidad ,angulo_inicio ,tamanno,cantidad_ramas,ancho_tronco,random1,random2)
+
+
+
+# -------------------------------------- #
+
+
+
+def clean_draw_canvas():
+    pygame.draw.rect(screen, COLOR_4, drawing_canvas_rect, 5)
+    pygame.draw.rect(screen, COLOR_1, drawing_canvas_rect)
+
+    #dibujamos el tronco
+    pygame.draw.rect(screen, COLOR_5, pygame.Rect(317, 300, 8, 60))
+    
+    pass
+
+def clean_tree_canvas():
+    #pygame.draw.rect(screen, COLOR_2, tree_rect)
+    pygame.draw.rect(screen, COLOR_4, tree_drawing_canvas_rect, 5)
+    pygame.draw.rect(screen, COLOR_1, tree_drawing_canvas_rect)
+
+    
+    pass
+
+clean_draw_canvas()
+clean_tree_canvas()
+while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -103,12 +183,13 @@ while False:
             draw = True
         if event.type == MOUSEBUTTONUP:
             draw = False
+            save_flag = False
 
         
     # dibujamos un circulo si se esta haciendo click
     mouse_pos = pygame.mouse.get_pos()
     if draw == True and drawing_canvas_rect.collidepoint(mouse_pos):
-        pygame.draw.circle(windowSurface, brush_color, mouse_pos, brush_size)
+        pygame.draw.circle(screen, brush_color, mouse_pos, brush_size)
         save_flag = False
 
 
@@ -128,22 +209,21 @@ while False:
     ## Detectamos si se hizo click en limpiar
     if draw == True:
         if clear_rect.collidepoint(mouse_pos):
-            pygame.draw.rect(windowSurface, COLOR_4, drawing_canvas_rect, 5)
-            pygame.draw.rect(windowSurface, COLOR_1, drawing_canvas_rect)
+            clean_draw_canvas()
 
             
     
-    pygame.draw.rect(windowSurface, COLOR_3, menu_rect)
+    pygame.draw.rect(screen, COLOR_3, menu_rect)
     
-    pygame.draw.rect(windowSurface, COLOR_4, clear_rect)
-    windowSurface.blit(clear_text, (30, 295))
+    pygame.draw.rect(screen, COLOR_4, clear_rect)
+    screen.blit(clear_text, (30, 295))
 
 
-    windowSurface.blit(brush_text, (27, 70))
+    screen.blit(brush_text, (27, 70))
     
 
-    pygame.draw.rect(windowSurface, COLOR_4, save_rect)
-    windowSurface.blit(save_text, (30, 262))
+    pygame.draw.rect(screen, COLOR_4, save_rect)
+    screen.blit(save_text, (30, 262))
 
 
 
@@ -153,10 +233,19 @@ while False:
     if draw == True and save_flag == False:
         if save_rect.collidepoint(mouse_pos):
             print("File has been saved :P")
-            save_surface = pygame.Surface((320, 360))
-            save_surface.blit(windowSurface, (0, 0), (160, 20, 320, 360))
-            get_diferencia(save_surface)
+            
+            clean_tree_canvas()
+            tree(x1=955,y1=359,profundidad=5,tamanno=10,cantidad_ramas=3,ancho_tronco=8,random1=5,random2=5)
+
+            save_surface_draw = pygame.Surface((320, 360))
+            save_surface_draw.blit(screen, (0, 0), (160, 20, 320, 360))
+
+            #tree_drawing_canvas_rect = pygame.Rect(795, 20, 320, 360)
+            save_surface_tree = pygame.Surface((320, 360))
+            save_surface_tree.blit(screen, (0, 0), (795, 20, 320, 360))
+            get_diferencia(save_surface_draw,save_surface_tree)
             save_flag = True
+
             
         
 
@@ -182,20 +271,20 @@ while False:
     
     
 
-    pygame.draw.rect(windowSurface, COLOR_1, eraser_rect)
+    pygame.draw.rect(screen, COLOR_1, eraser_rect)
     if brush_color == COLOR_1:
         border = 3
     else:
         border = 1
-    pygame.draw.rect(windowSurface, COLOR_4, eraser_rect, border)
+    pygame.draw.rect(screen, COLOR_4, eraser_rect, border)
 
-    pygame.draw.rect(windowSurface, COLOR_5, draw_rect)
+    pygame.draw.rect(screen, COLOR_5, draw_rect)
     if brush_color == COLOR_5:
         border = 3
     else:
         border = 1
     
-    pygame.draw.rect(windowSurface, COLOR_2, draw_rect, border)
+    pygame.draw.rect(screen, COLOR_2, draw_rect, border)
  
  
 
@@ -208,36 +297,36 @@ while False:
         brush_border = 3
     else:
         brush_border = 1
-    pygame.draw.rect(windowSurface, COLOR_1, thin_brush, brush_border)
-    pygame.draw.circle(windowSurface, COLOR_1, thin_brush.center, 1)
-    pygame.draw.rect(windowSurface, COLOR_1, thin_brush, brush_border)
+    pygame.draw.rect(screen, COLOR_1, thin_brush, brush_border)
+    pygame.draw.circle(screen, COLOR_1, thin_brush.center, 1)
+    pygame.draw.rect(screen, COLOR_1, thin_brush, brush_border)
     
     
     if brush_size == 3:
         brush_border = 3
     else:
         brush_border = 1
-    pygame.draw.rect(windowSurface, COLOR_1, medium_brush, brush_border)
-    pygame.draw.circle(windowSurface, COLOR_1, medium_brush.center, 3)
-    pygame.draw.rect(windowSurface, COLOR_1, medium_brush, brush_border)
+    pygame.draw.rect(screen, COLOR_1, medium_brush, brush_border)
+    pygame.draw.circle(screen, COLOR_1, medium_brush.center, 3)
+    pygame.draw.rect(screen, COLOR_1, medium_brush, brush_border)
     
     
     if brush_size == 5:
         brush_border = 3
     else:
         brush_border = 1
-    pygame.draw.rect(windowSurface, COLOR_1, thick_brush, 1)
-    pygame.draw.circle(windowSurface, COLOR_1, thick_brush.center, 5)
-    pygame.draw.rect(windowSurface, COLOR_1, thick_brush, brush_border)
+    pygame.draw.rect(screen, COLOR_1, thick_brush, 1)
+    pygame.draw.circle(screen, COLOR_1, thick_brush.center, 5)
+    pygame.draw.rect(screen, COLOR_1, thick_brush, brush_border)
     
     
     if brush_size == 10:
         brush_border = 3
     else:
         brush_border = 1
-    pygame.draw.rect(windowSurface, COLOR_1, supa_brush, brush_border)
-    pygame.draw.circle(windowSurface, COLOR_1, supa_brush.center, 10)
-    pygame.draw.rect(windowSurface, COLOR_1, supa_brush, brush_border)
+    pygame.draw.rect(screen, COLOR_1, supa_brush, brush_border)
+    pygame.draw.circle(screen, COLOR_1, supa_brush.center, 10)
+    pygame.draw.rect(screen, COLOR_1, supa_brush, brush_border)
 
 
     
