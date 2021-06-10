@@ -19,6 +19,7 @@ TREE_POS_X = 955
 TREE_POS_Y = 359
 
 
+
 pygame.init()
 
 
@@ -95,7 +96,8 @@ def get_diferencia(dibujo,arbol):
         porcentaje_txt = menu_font.render("{:.5f}".format(porcentaje) + "%", True, COLOR_1)
         pygame.draw.rect(screen, COLOR_3, porcentaje_rect)
         screen.blit(porcentaje_txt, (27, 600))
-        screen.blit(img, (794, 400))
+        screen.blit(img, (200, 400))
+    return porcentaje
 
 
 # ------------------------------------- #
@@ -107,12 +109,41 @@ def modificar_parametro(parametro,mutacion=0):
         mutacion (int, optional): [cantidad de mutacion que hay, mas alto mas deberia cambiar]. Defaults to 0.
 
     Returns:
-        [type]: [description]
+        [int]: [parame mutado]
     """    
     multiplier = random.choice([-1,1]) #hacemos negativo o positivo
-    modificador = random.randint(0,mutacion)
+    modificador = random.randint(1,mutacion)
     parametro += modificador*multiplier
+    if parametro == 0:
+        parametro = 2
     return abs(parametro)
+
+def mutar_parametros(parametros,mutacion=0):
+    """[mutamos un parametro al azar de la lista de parametros]
+
+    Args:
+        parametros ([lista]): [lista con los parametros]
+        mutacion (int, optional): [indice de mutacionm, se recomienda que el maximo sea 3 para que no cambie mucho]. Defaults to 0.
+
+    Returns:
+        [list]: [nueva lista de parametros]
+    """    
+    parametro_a_mutar = random.choice(parametros)
+    indice_pam = parametros.index(parametro_a_mutar)
+    parametro_a_mutar = modificar_parametro(parametro_a_mutar,mutacion)
+
+
+    parametros[indice_pam] = parametro_a_mutar
+
+    if parametros[4] > 45:
+        parametros[4] = 45
+
+    if parametros[5] > 10:
+        parametros[5] = 10
+
+
+    return parametros
+
 
 def get_black_percentage(size,img):
     color = pygame.Color((0, 0, 0, 255))
@@ -154,6 +185,41 @@ def get_parametros_random():
     #tree(x1=TREE_POS_X,y1=TREE_POS_Y,profundidad=5,tamanno=10,cantidad_ramas=3,ancho_tronco=8,random1=5,random2=5)
 
 
+def get_nueva_generacion(parametros,cantidad=8,mutacion=1):
+
+    img1 = get_draw_image() #imagen de la silueta que dimos
+    poblacion = []
+    parametros_poblacion = []
+    porcentajes = []
+    parametros_temp = parametros
+    parametros_mutados = parametros
+    for i in range(0,cantidad):
+
+        
+        tree(x1=TREE_POS_X,y1=TREE_POS_Y,profundidad=parametros_mutados[0],tamanno=parametros_mutados[1],cantidad_ramas=parametros_mutados[2],ancho_tronco=8,random1=parametros_mutados[4],random2=parametros_mutados[5])
+        
+        pygame.display.update()
+        img2 = get_tree_image()
+        poblacion += [img2]
+        porcentaje = get_diferencia(img1,img2)
+        porcentajes += [porcentaje]
+
+        parametros = parametros_temp
+        parametros_mutados = mutar_parametros(parametros,mutacion)
+
+        #hacemos verificacion para evitar parametros sumamente altos
+        #mutamos los parametros aqui para que el primer arbol generado sea el mejor de la generacion anterior
+        if parametros_mutados[0] > 6:
+            parametros_mutados[0] = 5
+        if parametros_mutados[2] > 5:
+            parametros_mutados[2] = 5
+        parametros_poblacion += [parametros_mutados]
+        clean_tree_canvas()
+    
+    index_best_porcentage = porcentajes.index(max(porcentajes)) #obtenemos el index del porcentage mas alto
+
+    best_parametros = parametros_poblacion[index_best_porcentage]
+    return best_parametros
 
 def get_poblacion_inicial(cantidad=8):
     """[obtenemos la poblacion inicial]
@@ -162,22 +228,31 @@ def get_poblacion_inicial(cantidad=8):
         cantidad (int, optional): [cantidad de individuos de la poblacion inicial]. Defaults to 8.
 
     Returns:
-        [array]: [lista con las imagenes (en formato pygame) de la poblacion inicial]
+        [array]: [lista con los parametros del mejor arbol de la poblacion inicial]
     """    
     img1 = get_draw_image()
     poblacion_inicial = []
+    parametros_poblacion_inicial = []
+    porcentajes = []
     for i in range(0,cantidad):
         parametros = get_parametros_random() #obtenemos los parametros
+        parametros_poblacion_inicial += [parametros]
 
         clean_tree_canvas()
-        
         tree(x1=TREE_POS_X,y1=TREE_POS_Y,profundidad=parametros[0],tamanno=parametros[1],cantidad_ramas=parametros[2],ancho_tronco=parametros[3],random1=parametros[4],random2=parametros[5])
+        
         pygame.display.update()
         img2 = get_tree_image()
         poblacion_inicial += [img2]
-        get_diferencia(img1,img2)
+        porcentaje = get_diferencia(img1,img2)
+        porcentajes += [porcentaje]
     
-    return poblacion_inicial
+    index_best_porcentage = porcentajes.index(max(porcentajes)) #obtenemos el index del porcentage mas alto
+
+    best_parametros = parametros_poblacion_inicial[index_best_porcentage]
+
+    
+    return best_parametros
 
 
 
@@ -242,7 +317,9 @@ def tree(x1,y1,profundidad,tamanno,cantidad_ramas, ancho_tronco,random1, random2
         ancho_tronco ([int]): [hancho del tronco del arbol]
         random1 ([int]): [random en los angulos de las hojas]
         random2 ([int]): [random en el largo de las hojas]
-    """    
+    """
+    if (cantidad_ramas-1) == 0:
+        cantidad_ramas = 2
     angulo_inicio =180+(180/(cantidad_ramas-1))
     if cantidad_ramas==2:
         angulo_inicio-=90
@@ -338,7 +415,11 @@ while True:
     #detectamos si se hizo click en guardar
     if draw == True and save_flag == False:
         if save_rect.collidepoint(mouse_pos):
-            get_poblacion_inicial(1)
+            parametros = get_poblacion_inicial(8)
+            for i in range(0,30):
+                new_parametros = get_nueva_generacion(parametros,15,1)
+                parametros = new_parametros
+
             save_flag = True
             """
             print("File has been saved :P")
