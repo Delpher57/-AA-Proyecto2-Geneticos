@@ -31,7 +31,7 @@ pygame.init()
 
 
 ## font setup
-menu_font = pygame.font.SysFont("consolas", 17)
+menu_font = pygame.font.Font("font.ttf", 17) #pygame.font.SysFont("consolas", 17)
 clear_text = menu_font.render("Limpiar", True, COLOR_1)
 brush_text = menu_font.render("Herramientas", True, COLOR_1)
 save_text = menu_font.render("Iniciar", True, COLOR_1)
@@ -96,6 +96,7 @@ def get_diferencia(dibujo,arbol,generacion,individuo,subindividuo,parametros=[])
 
 
     diff = ImageChops.difference(pil_dibujo,pil_arbol)
+    porcentaje = 100
     if diff.getbbox():
         #diff.show()
         img = pygame.image.fromstring(diff.tobytes(), diff.size, diff.mode)
@@ -130,8 +131,8 @@ def modificar_parametro(parametro,mutacion=0,decimales=False):
     multiplier = 0
     if decimales:
         multiplier = get_random(mutacion)
-    else:
-        multiplier = random.choice([-1,1]) #hacemos negativo o positivo
+
+    multiplier = random.choice([-1,1]) #hacemos negativo o positivo
     
     parametro += multiplier
     parametro = round(parametro, 2)
@@ -247,6 +248,7 @@ def get_nueva_generacion(palangana,cantidad=8,mutacion=1,numero_generacion=0):
             porcentaje = get_diferencia(img1,img2,numero_generacion,i,j,parametros_mutados)
             porcentaje_temporal += porcentaje
             clean_tree_canvas()
+            pygame.event.clear()
         
         parametros_poblacion += [parametros_mutados]
 
@@ -403,15 +405,21 @@ def clean_tree_canvas():
 
 clean_draw_canvas()
 clean_tree_canvas()
+running_evolution = False
 while True:
-    for event in pygame.event.get():
+    if running_evolution == False:
+    
+        for event in [pygame.event.poll()]:
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
 
+            if event.type == MOUSEBUTTONDOWN:
+                draw = True
+            elif event.type == MOUSEBUTTONUP:
+                draw = False
+                save_flag = False
 
-        if event.type == MOUSEBUTTONDOWN:
-            draw = True
-        if event.type == MOUSEBUTTONUP:
-            draw = False
-            save_flag = False
 
         
     # dibujamos un circulo si se esta haciendo click
@@ -459,13 +467,20 @@ while True:
 
     #detectamos si se hizo click en guardar
     if draw == True and save_flag == False:
+        save_flag = True
+        
         if save_rect.collidepoint(mouse_pos):
+            running_evolution = True
             parametros = get_poblacion_inicial(8)
             for i in range(0,numero_generaciones_totales):
                 new_parametros = get_nueva_generacion(parametros,individuos_por_generacion,1,i)
                 parametros = new_parametros
+                a = pygame.event.poll()
+                pygame.event.clear()
+            running_evolution = False
+            
 
-            save_flag = True
+            
             """
             print("File has been saved :P")
             
